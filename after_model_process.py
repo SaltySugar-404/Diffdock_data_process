@@ -1,9 +1,20 @@
+import argparse
+import os.path
 import re
 from typing import List
 
 import pandas as pd
 
 from init import *
+
+parser = argparse.ArgumentParser(description="Run this after model process.")
+parser.add_argument('--task_name', type=str, required=True, help='Select task name in dir tasks.')
+args = parser.parse_args()
+
+current_task_name = args.task_name
+if current_task_name not in os.listdir(ALL_TASKS):
+    print(r"Task name {current_task_name} not found.")
+    exit(1)
 
 
 def get_rank(file_name):
@@ -26,8 +37,9 @@ def get_results(all_results_dir: str, num_predicts):
     proteins, ligands = [], []
     rank_confidences = [[] for _ in range(num_predicts)]
     all_dirs = [os.path.join(all_results_dir, dir_name) for dir_name in os.listdir(all_results_dir)]
+    protein_id = current_task_name.split('_index_')[0]
     for dir in all_dirs:
-        proteins.append(CURRENT_PROTEIN_NAME)
+        proteins.append(protein_id)
         ligand_id = dir.split('_')[-1]
         ligands.append(ligand_id)
         if not len(os.listdir(dir)):
@@ -43,9 +55,8 @@ def get_results(all_results_dir: str, num_predicts):
     for index in range(len(rank_confidences)):
         data_dict[f"rank_{index + 1}_confidence"] = rank_confidences[index]
     all_results_file = pd.DataFrame(data_dict).sort_values(by='rank_1_confidence', ascending=False)
-    all_results_file.to_csv(os.path.join(os.path.dirname(all_results_dir), 'all_results.csv'),
-                            index=False)
+    all_results_file.to_csv(os.path.join(os.path.dirname(all_results_dir), 'all_results.csv'), index=False)
 
 
 if __name__ == "__main__":
-    get_results(MODEL_OUTPUTS_DIR, NUM_PREDICTS)
+    get_results(os.path.join(ALL_TASKS, current_task_name, "all_model_outputs"), NUM_PREDICTS)
