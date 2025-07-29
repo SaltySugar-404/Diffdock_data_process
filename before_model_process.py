@@ -25,7 +25,7 @@ NUM_GPUS = args.num_gpus
 # 当前任务文件夹，默认是蛋白质名
 CURRENT_PROTEIN_NAME = os.listdir(OUTSIDE_PROTEIN_INPUT_DIR)[0].split(".")[0]
 current_task_name = ""
-all_task_name_and_index = os.listdir(ALL_TASKS)
+all_task_name_and_index = os.listdir(ALL_TASKS_DIR)
 max_task_index = -1
 for task_name_and_index in all_task_name_and_index:
     if len(task_name_and_index.split(".")) == 2:
@@ -35,7 +35,7 @@ for task_name_and_index in all_task_name_and_index:
     if task_name == CURRENT_PROTEIN_NAME and task_index > max_task_index:
         max_task_index = task_index
 current_task_name = CURRENT_PROTEIN_NAME + f"_index_{max_task_index + 1}"
-CURRENT_TASK_DIR = os.path.join(ALL_TASKS, current_task_name)
+CURRENT_TASK_DIR = os.path.join(ALL_TASKS_DIR, current_task_name)
 os.makedirs(CURRENT_TASK_DIR, exist_ok=True)
 
 # 蛋白质输入文件夹
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         current_command += f"--out_dir {MODEL_OUTPUTS_DIR} "
         current_command += f"{MODEL_LOGS_DIR}/chunk_{index}_log.out 2>&1 &"
         commands.append(current_command)
-
+    print("Running commands:")
     for command in commands:
         print(command)
         subprocess.Popen(command, shell=True)

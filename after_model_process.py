@@ -12,7 +12,7 @@ parser.add_argument('--task_name', type=str, required=True, help='Select task na
 args = parser.parse_args()
 
 current_task_name = args.task_name
-if current_task_name not in os.listdir(ALL_TASKS):
+if current_task_name not in os.listdir(ALL_TASKS_DIR):
     print(r"Task name {current_task_name} not found.")
     exit(1)
 
@@ -59,4 +59,4 @@ def get_results(all_results_dir: str, num_predicts):
 
 
 if __name__ == "__main__":
-    get_results(os.path.join(ALL_TASKS, current_task_name, "all_model_outputs"), NUM_PREDICTS)
+    get_results(os.path.join(ALL_TASKS_DIR, current_task_name, "all_model_outputs"), NUM_PREDICTS)
