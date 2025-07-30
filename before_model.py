@@ -26,10 +26,8 @@ def generate_model_input(protein_dir: str, split_ligands_dir: str, model_inputs_
     all_complex_name, all_protein_path, all_ligand_description, all_protein_sequence = [], [], [], []
     for ligand_id in all_ligand_ids:
         all_complex_name.append(f"{protein_id}_{ligand_id}")
-        all_protein_path.append(
-            os.path.join(CODE_ROOT_DIR_NAME, task_id, "input_one_protein_here", protein_id + ".pdb"))
-        all_ligand_description.append(
-            os.path.join(CODE_ROOT_DIR_NAME, task_id, "input_split_ligands_here", ligand_id + ".sdf"))
+        all_protein_path.append(os.path.join(protein_dir, protein_id + ".pdb"))
+        all_ligand_description.append(os.path.join(split_ligands_dir, "input_split_ligands_here", ligand_id + ".sdf"))
     all_model_inputs = pd.DataFrame({"complex_name": all_complex_name, "protein_path": all_protein_path,
                                      "ligand_description": all_ligand_description})
     all_model_inputs["protein_sequence"] = None
@@ -37,7 +35,6 @@ def generate_model_input(protein_dir: str, split_ligands_dir: str, model_inputs_
     total = len(all_model_inputs.index)
     chunk_size = math.ceil(total / num_chunks)
     split_model_inputs = [all_model_inputs[i:i + chunk_size] for i in range(0, total, chunk_size)]
-    model_inputs_dir = os.path.join(ALL_TASKS_DIR, task_id, "all_model_inputs")
     for i, one_model_input in enumerate(split_model_inputs):
         one_model_input.to_csv(os.path.join(model_inputs_dir, f"chunk_{i}.csv"), index=False)
 
