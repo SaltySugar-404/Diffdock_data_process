@@ -38,8 +38,29 @@ def new_task(task_id: str):
     os.makedirs(logs_dir, exist_ok=True)
 
 
-def before_model_process(task_id: str):
-    
+def before_model_process(task_id: str, split_key_word: str):
+    task_dir = os.path.join(ALL_TASKS_DIR, task_id)
+    input_one_protein_dir = os.path.join(task_dir, "input_one_protein_here")
+    input_unsplit_ligands_dir = os.path.join(task_dir, "input_unsplit_ligands_here")
+    input_split_ligands_dir = os.path.join(task_dir, "input_split_ligands_here")
+    all_model_inputs_dir = os.path.join(task_dir, "all_model_inputs")
+    all_model_outputs_dir = os.path.join(task_dir, "all_model_outputs")
+    logs_dir = os.path.join(task_dir, "logs")
+    if len(os.listdir(all_model_inputs_dir)):
+        return
+    if len(os.listdir(input_one_protein_dir)) == 0:
+        return
+    if not len(os.listdir(input_one_protein_dir)) == 1:
+        return
+    if not len(os.listdir(input_unsplit_ligands_dir)) + len(os.listdir(input_split_ligands_dir)):
+        return
+
+    if len(os.listdir(input_split_ligands_dir)) == 0 and len(os.listdir(input_unsplit_ligands_dir)):
+        split_sdf(input_unsplit_ligands_dir, input_unsplit_ligands_dir, split_key_word)
+    generate_model_input(task_id, len(GPU_INDEXES))
+    commands = get_commands(task_id)
+    for command in commands:
+        print(command)
 
 
 def show_tasks():
@@ -59,3 +80,4 @@ def insert_task(task_id: str, index: int):
 
 if __name__ == "__main__":
     show_tasks()
+    before_model_process(task_id="test_3", split_key_word="zinc_id")
