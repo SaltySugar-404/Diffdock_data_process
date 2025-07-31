@@ -57,13 +57,11 @@ def new_task(task_id: str):
     all_model_outputs_dir = os.path.join(task_dir, "all_model_outputs")
     logs_dir = os.path.join(task_dir, "logs")
     sh_dir = os.path.join(task_dir, "sh")
-    pid_dir = os.path.join(task_dir, "pid")
     os.makedirs(task_dir, exist_ok=True)
     os.makedirs(all_model_inputs_dir, exist_ok=True)
     os.makedirs(all_model_outputs_dir, exist_ok=True)
     os.makedirs(logs_dir, exist_ok=True)
     os.makedirs(sh_dir, exist_ok=True)
-    os.makedirs(pid_dir, exist_ok=True)
 
     # process
     root_protein_file = all_root_protein_files[0]
@@ -71,7 +69,7 @@ def new_task(task_id: str):
     if not os.path.isfile(task_protein_file):
         shutil.copy(root_protein_file, task_dir)
     generate_model_input(task_protein_file, OUTSIDE_SPLIT_LIGANDS_DIR, all_model_inputs_dir)
-    get_save_commands(all_model_inputs_dir, all_model_outputs_dir, logs_dir, sh_dir, pid_dir)
+    get_save_commands(all_model_inputs_dir, all_model_outputs_dir, logs_dir, sh_dir)
     print(f"Task id: {task_id} created")
 
 

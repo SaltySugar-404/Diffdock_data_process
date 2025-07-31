@@ -75,7 +75,7 @@ def generate_model_input(protein_file: str, split_ligands_dir: str, model_inputs
         one_model_input.to_csv(os.path.join(model_inputs_dir, f"chunk_{i}.csv"), index=False)
 
 
-def get_save_commands(model_inputs_dir: str, model_outputs_dir: str, logs_dir: str, sh_dir: str, pid_dir):
+def get_save_commands(model_inputs_dir: str, model_outputs_dir: str, logs_dir: str, sh_dir):
     root_model_inputs_dir = os.path.join(CODE_ROOT_DIR_NAME, model_inputs_dir)
     root_model_outputs_dir = os.path.join(CODE_ROOT_DIR_NAME, model_outputs_dir)
     root_logs_dir = os.path.join(CODE_ROOT_DIR_NAME, logs_dir)
@@ -91,7 +91,7 @@ def get_save_commands(model_inputs_dir: str, model_outputs_dir: str, logs_dir: s
         current_command += f"--protein_ligand_csv {os.path.join(root_model_inputs_dir, file_name)} "
         current_command += f"--out_dir {root_model_outputs_dir} "
         current_command += f"> {os.path.join(root_logs_dir, f'logs_{index}.out')} 2>&1 & "
-        current_command += f"echo $! > {os.path.join(pid_dir, f'chunk_{index}.pid')}"
+        current_command += f"echo $! > {os.path.join(sh_dir, f'chunk_{index}.pid')}"
         all_commands.append(current_command)
 
     for i in range(0, len(all_commands), num_gpus):
