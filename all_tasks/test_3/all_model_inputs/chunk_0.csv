@@ -1,3 +1,0 @@
-complex_name,protein_path,ligand_description,protein_sequence
-cluster6_1_ZINC000000000053,run_diffdock\test_3\input_one_protein_here\cluster6_1.pdb,run_diffdock\test_3\input_split_ligands_here\ZINC000000000053.sdf,
-cluster6_1_ZINC000000000061,run_diffdock\test_3\input_one_protein_here\cluster6_1.pdb,run_diffdock\test_3\input_split_ligands_here\ZINC000000000061.sdf,

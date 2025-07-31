@@ -1,83 +1,107 @@
-import json
-from typing import List
+import argparse
+import os.path
+import shutil
 
 from before_model import *
 
 
 def get_tasks():
-    with open(TASK_MANAGER_FILE, "r") as f:
-        all_tasks = json.load(f)
-    return all_tasks["finished_tasks"], all_tasks["running_tasks"]
+    return [file for file in os.listdir(ALL_TASKS_DIR) if os.path.isdir(os.path.join(ALL_TASKS_DIR, file))]
 
 
-def update_tasks(finished_tasks: List[str], running_tasks: List[str]):
-    with open(TASK_MANAGER_FILE, "w") as f:
-        json.dump({"finished_tasks": finished_tasks, "running_tasks": running_tasks}, f)
+def list_tasks():
+    print(f"All tasks: {get_tasks()}")
 
 
 def new_task(task_id: str):
-    finished_tasks, running_tasks = get_tasks()
-    all_tasks = finished_tasks + running_tasks
-    if task_id in all_tasks:
-        print(f'Task {task_id} already exists, adding as {task_id}_new')
-        task_id += "_new"
+    # check split keyword
+    if not len(SPLIT_KEYWORD):
+        print(f"Split keyword empty")
+        exit(1)
+    # check task ids
+    all_tasks = get_tasks()
+    while task_id in all_tasks:
+        print(f"Task id: {task_id} already in tasks list, trying {str(task_id + '_new')}")
+        task_id = str(task_id + "_new")
+    # check protein inputs
+    all_root_protein_files = [os.path.join(OUTSIDE_PROTEIN_INPUT_DIR, f) for f in os.listdir(OUTSIDE_PROTEIN_INPUT_DIR)]
+    all_root_protein_files = [f for f in all_root_protein_files if f.endswith('.pdb')]
+    if len(all_root_protein_files) == 0:
+        print(f"No protein file found in {OUTSIDE_PROTEIN_INPUT_DIR}")
+        exit(1)
+    if len(all_root_protein_files) > 1:
+        print(f"Too mach protein files in {OUTSIDE_PROTEIN_INPUT_DIR}")
+        exit(1)
 
+    # check ligand inputs
+    all_root_unsplit_ligand_files = [os.path.join(OUTSIDE_UNSPLIT_LIGANDS_DIR, f) for f in os.listdir(OUTSIDE_UNSPLIT_LIGANDS_DIR)]
+    all_root_unsplit_ligand_files = [f for f in all_root_unsplit_ligand_files if f.endswith('.sdf')]
+    all_root_split_ligand_files = [os.path.join(OUTSIDE_SPLIT_LIGANDS_DIR, f) for f in os.listdir(OUTSIDE_SPLIT_LIGANDS_DIR)]
+    all_root_split_ligand_files = [f for f in all_root_split_ligand_files if f.endswith('.sdf')]
+    if len(all_root_split_ligand_files) == 0:
+        if len(all_root_unsplit_ligand_files) == 0:
+            print(f"No ligand file found in {OUTSIDE_UNSPLIT_LIGANDS_DIR}")
+            exit(1)
+        if len(all_root_unsplit_ligand_files) > 1:
+            print(f"Too much ligand files found in {OUTSIDE_UNSPLIT_LIGANDS_DIR}")
+            exit(1)
+        split_sdf(OUTSIDE_UNSPLIT_LIGANDS_DIR, OUTSIDE_SPLIT_LIGANDS_DIR)
+        # check split
+        if not check_split(OUTSIDE_SPLIT_LIGANDS_DIR):
+            print(f"Error split keyword: {SPLIT_KEYWORD}")
+            exit(1)
+
+    # make dirs
     task_dir = os.path.join(ALL_TASKS_DIR, task_id)
-    input_one_protein_dir = os.path.join(task_dir, "input_one_protein_here")
-    input_unsplit_ligands_dir = os.path.join(task_dir, "input_unsplit_ligands_here")
-    input_split_ligands_dir = os.path.join(task_dir, "input_split_ligands_here")
     all_model_inputs_dir = os.path.join(task_dir, "all_model_inputs")
     all_model_outputs_dir = os.path.join(task_dir, "all_model_outputs")
     logs_dir = os.path.join(task_dir, "logs")
+    sh_dir = os.path.join(task_dir, "sh")
+    pid_dir = os.path.join(task_dir, "pid")
     os.makedirs(task_dir, exist_ok=True)
-    os.makedirs(input_one_protein_dir, exist_ok=True)
-    os.makedirs(input_unsplit_ligands_dir, exist_ok=True)
-    os.makedirs(input_split_ligands_dir, exist_ok=True)
     os.makedirs(all_model_inputs_dir, exist_ok=True)
     os.makedirs(all_model_outputs_dir, exist_ok=True)
     os.makedirs(logs_dir, exist_ok=True)
+    os.makedirs(sh_dir, exist_ok=True)
+    os.makedirs(pid_dir, exist_ok=True)
+
+    # process
+    root_protein_file = all_root_protein_files[0]
+    task_protein_file = os.path.join(task_dir, os.path.basename(root_protein_file))
+    if not os.path.isfile(task_protein_file):
+        shutil.copy(root_protein_file, task_dir)
+    generate_model_input(task_protein_file, OUTSIDE_SPLIT_LIGANDS_DIR, all_model_inputs_dir)
+    get_save_commands(all_model_inputs_dir, all_model_outputs_dir, logs_dir, sh_dir, pid_dir)
+    print(f"Task id: {task_id} created")
 
 
-def before_model_process(task_id: str, split_key_word: str):
-    task_dir = os.path.join(ALL_TASKS_DIR, task_id)
-    input_one_protein_dir = os.path.join(task_dir, "input_one_protein_here")
-    input_unsplit_ligands_dir = os.path.join(task_dir, "input_unsplit_ligands_here")
-    input_split_ligands_dir = os.path.join(task_dir, "input_split_ligands_here")
-    all_model_inputs_dir = os.path.join(task_dir, "all_model_inputs")
-    all_model_outputs_dir = os.path.join(task_dir, "all_model_outputs")
-    logs_dir = os.path.join(task_dir, "logs")
-    if len(os.listdir(all_model_inputs_dir)):
-        return
-    if len(os.listdir(input_one_protein_dir)) == 0:
-        return
-    if not len(os.listdir(input_one_protein_dir)) == 1:
-        return
-    if not len(os.listdir(input_unsplit_ligands_dir)) + len(os.listdir(input_split_ligands_dir)):
-        return
-
-    if len(os.listdir(input_split_ligands_dir)) == 0 and len(os.listdir(input_unsplit_ligands_dir)):
-        split_sdf(input_unsplit_ligands_dir, input_unsplit_ligands_dir, split_key_word)
-    generate_model_input(task_id, len(GPU_INDEXES))
-    commands = get_commands(task_id)
-    for command in commands:
-        print(command)
+def delete_task(task_id: str):
+    all_tasks = get_tasks()
+    if task_id not in all_tasks:
+        print(f"Task id: {task_id} not found")
+    else:
+        shutil.rmtree(os.path.join(ALL_TASKS_DIR, task_id))
+        print(f"Task id: {task_id} deleted")
 
 
-def show_tasks():
-    finished_tasks, running_tasks = get_tasks()
-    print(f"finished tasks:{finished_tasks}")
-    print(f"running tasks:{running_tasks}")
-
-
-def insert_task(task_id: str, index: int):
-    finished_tasks, running_tasks = get_tasks()
-    if not (1 <= index <= len(running_tasks)):
-        print(f"Fail to insert task: {task_id}, index:{index} is out of valid range [1, {len(running_tasks)}]")
-        return
-    running_tasks.insert(index, task_id)
-    update_tasks(finished_tasks, running_tasks)
+def run_task(task_id: str, command_index: int):
+    sh_dir = os.path.join(ALL_TASKS_DIR, "commands", task_id)
 
 
 if __name__ == "__main__":
-    show_tasks()
-    before_model_process(task_id="test_3", split_key_word="zinc_id")
+    parser = argparse.ArgumentParser(description="Task Manager")
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--list", action="store_true", help="List all tasks")
+    group.add_argument("--new", metavar="TASK_ID", type=str, help="Create new task with TASK_ID")
+    group.add_argument("--delete", metavar="TASK_ID", type=str, help="Delete task with TASK_ID")
+    group.add_argument("--run", metavar="TASK_ID", type=str, help="Run task with TASK_ID")
+
+    args = parser.parse_args()
+
+    if args.list:
+        list_tasks()
+    elif args.new:
+        new_task(args.new)
+    elif args.delete:
+        delete_task(args.delete)
