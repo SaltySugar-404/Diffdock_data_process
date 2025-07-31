@@ -1,25 +1,32 @@
 import os
 
-# 项目文件夹
-CODE_ROOT_DIR_NAME = r"run_diffdock"
+# dirs
 
-OUTSIDE_PROTEIN_INPUT_DIR = "input_one_protein_here"
-os.makedirs(OUTSIDE_PROTEIN_INPUT_DIR, exist_ok=True)
+# 当前目录
+BASE_DIR_NAME = os.path.basename(os.getcwd())
 
-OUTSIDE_UNSPLIT_LIGANDS_DIR = "input_unsplit_ligands_here"
-os.makedirs(OUTSIDE_UNSPLIT_LIGANDS_DIR, exist_ok=True)
+# 上一级路径
+PARENT_DIR_PATH = os.path.dirname(os.getcwd())
 
-OUTSIDE_SPLIT_LIGANDS_DIR = "input_split_ligands_here"
-os.makedirs(OUTSIDE_SPLIT_LIGANDS_DIR, exist_ok=True)
+BASE_PROTEIN_INPUT_DIR = "input_one_protein_here"
+os.makedirs(BASE_PROTEIN_INPUT_DIR, exist_ok=True)
+
+BASE_UNSPLIT_LIGANDS_DIR = "input_unsplit_ligands_here"
+os.makedirs(BASE_UNSPLIT_LIGANDS_DIR, exist_ok=True)
+
+BASE_SPLIT_LIGANDS_DIR = "input_split_ligands_here"
+os.makedirs(BASE_SPLIT_LIGANDS_DIR, exist_ok=True)
 
 # 所有任务
-ALL_TASKS_DIR = "all_tasks"
-os.makedirs(ALL_TASKS_DIR, exist_ok=True)
+BASE_TASKS_DIR = "all_tasks"
+os.makedirs(BASE_TASKS_DIR, exist_ok=True)
 
-# 任务记录
-TASK_MANAGER_FILE = "all_tasks.json"
+# sh脚本存放目录
+BASE_SH_DIR = "sh"
+os.makedirs(BASE_SH_DIR, exist_ok=True)
 
 # configs
+
 # 可用gpu数量
 GPU_INDEXES = [0, 1, 2, 3]
 

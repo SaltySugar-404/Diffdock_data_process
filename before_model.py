@@ -1,3 +1,5 @@
+import os.path
+
 import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import SDWriter
@@ -58,8 +60,8 @@ def generate_model_input(protein_file: str, split_ligands_dir: str, model_inputs
     all_complex_name, all_protein_path, all_ligand_description = [], [], []
     for index in range(len(all_ligand_ids)):
         all_complex_name.append(f"{protein_id}_{all_ligand_ids[index]}")
-        all_protein_path.append(protein_file)
-        all_ligand_description.append(all_ligand_files[index])
+        all_protein_path.append(os.path.join(BASE_DIR_NAME, protein_file))
+        all_ligand_description.append(os.path.join(BASE_DIR_NAME, all_ligand_files[index]))
 
     all_model_inputs = pd.DataFrame({
         "complex_name": all_complex_name,
@@ -72,32 +74,38 @@ def generate_model_input(protein_file: str, split_ligands_dir: str, model_inputs
     split_model_inputs = [all_model_inputs[i:i + CHUNK_SIZE] for i in range(0, total, CHUNK_SIZE)]
 
     for i, one_model_input in enumerate(split_model_inputs):
-        one_model_input.to_csv(os.path.join(model_inputs_dir, f"chunk_{i}.csv"), index=False)
+        one_model_input.to_csv(os.path.join(model_inputs_dir, f"chunk_{i:03d}.csv"), index=False)
 
 
 def get_save_commands(model_inputs_dir: str, model_outputs_dir: str, logs_dir: str, sh_dir):
-    root_model_inputs_dir = os.path.join(CODE_ROOT_DIR_NAME, model_inputs_dir)
-    root_model_outputs_dir = os.path.join(CODE_ROOT_DIR_NAME, model_outputs_dir)
-    root_logs_dir = os.path.join(CODE_ROOT_DIR_NAME, logs_dir)
     all_files = sorted([f for f in os.listdir(model_inputs_dir) if f.startswith("chunk_") and f.endswith(".csv")])
     num_gpus = len(GPU_INDEXES)
     all_commands = []
 
     for index, file_name in enumerate(all_files):
         gpu_index = GPU_INDEXES[index % num_gpus]
+        run_index = index // num_gpus
         current_command = ""
-        current_command += f"CUDA_VISIBLE_DEVICES={gpu_index} nohup python -m inference "
-        current_command += f"--config default_inference_args.yaml "
-        current_command += f"--protein_ligand_csv {os.path.join(root_model_inputs_dir, file_name)} "
-        current_command += f"--out_dir {root_model_outputs_dir} "
-        current_command += f"> {os.path.join(root_logs_dir, f'logs_{index}.out')} 2>&1 & "
-        current_command += f"echo $! > {os.path.join(sh_dir, f'chunk_{index}.pid')}"
+        current_command += f"CUDA_VISIBLE_DEVICES={gpu_index} "
+        current_command += f"nohup python -m inference --config default_inference_args.yaml "
+        current_command += f"--protein_ligand_csv {os.path.join(BASE_DIR_NAME, model_inputs_dir, file_name)} "
+        current_command += f"--out_dir {os.path.join(BASE_DIR_NAME, model_outputs_dir)} "
+        current_command += f"> {os.path.join(BASE_DIR_NAME, logs_dir, f'run_{run_index:03d}_gpu_{gpu_index}.out')} 2>&1 & "
+        current_command += f"echo $! > {os.path.join(BASE_DIR_NAME, sh_dir, f'run_{run_index:03d}_gpu_{gpu_index}.pid')}"
         all_commands.append(current_command)
 
-    for i in range(0, len(all_commands), num_gpus):
-        sh_path = os.path.join(sh_dir, f"run_{i // num_gpus}.sh")
+        for i in range(0, len(all_commands), num_gpus):
+            sh_path = os.path.join(sh_dir, f"run_{(i // num_gpus):03d}.sh")
         with open(sh_path, "w") as f:
             f.write("#!/bin/bash\n\n")
             batch_cmds = all_commands[i:i + num_gpus]
             for cmd in batch_cmds:
                 f.write(cmd + "\n")
+
+
+def delete_pid_file(pid_dir: str):
+    for filename in os.listdir(pid_dir):
+        if filename.endswith('.pid'):
+            file_path = os.path.join(pid_dir, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)

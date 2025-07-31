@@ -1,6 +1,0 @@
-#!/bin/bash
-
-CUDA_VISIBLE_DEVICES=0 nohup python -m inference --config default_inference_args.yaml --protein_ligand_csv run_diffdock\all_tasks\test_2\all_model_inputs\chunk_0.csv --out_dir run_diffdock\all_tasks\test_2\all_model_outputs > run_diffdock\all_tasks\test_2\logs\logs_0.out 2>&1 & echo $! > all_tasks\test_2\sh\chunk_0.pid
-CUDA_VISIBLE_DEVICES=1 nohup python -m inference --config default_inference_args.yaml --protein_ligand_csv run_diffdock\all_tasks\test_2\all_model_inputs\chunk_1.csv --out_dir run_diffdock\all_tasks\test_2\all_model_outputs > run_diffdock\all_tasks\test_2\logs\logs_1.out 2>&1 & echo $! > all_tasks\test_2\sh\chunk_1.pid
-CUDA_VISIBLE_DEVICES=2 nohup python -m inference --config default_inference_args.yaml --protein_ligand_csv run_diffdock\all_tasks\test_2\all_model_inputs\chunk_10.csv --out_dir run_diffdock\all_tasks\test_2\all_model_outputs > run_diffdock\all_tasks\test_2\logs\logs_2.out 2>&1 & echo $! > all_tasks\test_2\sh\chunk_2.pid
-CUDA_VISIBLE_DEVICES=3 nohup python -m inference --config default_inference_args.yaml --protein_ligand_csv run_diffdock\all_tasks\test_2\all_model_inputs\chunk_11.csv --out_dir run_diffdock\all_tasks\test_2\all_model_outputs > run_diffdock\all_tasks\test_2\logs\logs_3.out 2>&1 & echo $! > all_tasks\test_2\sh\chunk_3.pid
