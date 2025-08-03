@@ -16,10 +16,11 @@ def get_confidence(file_name: str):
     return float(file_name.split('confidence')[-1].split('.sd')[0])
 
 
-def get_confidences(one_predict_result_dir: str) -> (str, List[float]):
+def get_confidences(one_predict_result_dir: str) -> List[float]:
     predicted_names = os.listdir(one_predict_result_dir)
-    sorted_predicted_names = sorted(predicted_names, key=get_rank)
-    confidences = [get_confidence(file_name) for file_name in sorted_predicted_names[1:]]
+    confidence_files = [f for f in predicted_names if 'confidence' in f]
+    sorted_confidence_files = sorted(confidence_files, key=get_rank)
+    confidences = [get_confidence(file_name) for file_name in sorted_confidence_files]
     return confidences
 
 
