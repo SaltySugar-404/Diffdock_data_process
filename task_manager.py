@@ -121,7 +121,7 @@ def save_results(task_id: str):
     task_dir = os.path.join(BASE_TASKS_DIR, task_id)
     protein_id = [f for f in os.listdir(task_dir) if f.endswith('.pdb')][0].split('.')[0]
     all_model_outputs_dir = os.path.join(task_dir, "all_model_outputs")
-    output_file = os.path.join(task_dir, "results.csv")
+    output_file = os.path.join(task_dir, str(task_id) + "_results.csv")
     get_save_results(protein_id, all_model_outputs_dir, 10, output_file)
     print(f"Task id: {task_id} {output_file} saved")
 

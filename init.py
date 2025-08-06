@@ -34,7 +34,7 @@ GPU_INDEXES = [0, 1, 2, 3]
 SPLIT_KEYWORD = "zinc_id"
 
 # 每个模型输入区块的结合物数量，用以减小显存占用，提高处理速度
-CHUNK_SIZE = 100
+CHUNK_SIZE = 1000
 
 if __name__ == "__main__":
     print("Initializing diffdock model...")
